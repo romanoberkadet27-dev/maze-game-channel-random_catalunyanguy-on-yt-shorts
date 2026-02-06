@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secret Maze Challenge</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #f8fafc;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: rgba(30, 41, 59, 0.85);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 2.8rem;
+            background: linear-gradient(90deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 2px 10px rgba(96, 165, 250, 0.2);
+        }
+        
+        .subtitle {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #cbd5e1;
+            font-size: 1.1rem;
+        }
+        
+        /* Password screen styling */
+        .password-screen {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        
+        .password-form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 25px;
+            margin-top: 30px;
+        }
+        
+        .password-input {
+            width: 100%;
+            max-width: 400px;
+            padding: 18px 25px;
+            font-size: 1.5rem;
+            letter-spacing: 8px;
+            text-align: center;
+            background: rgba(15, 23, 42, 0.7);
+            border: 2px solid #475569;
+            border-radius: 12px;
+            color: #f8fafc;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        
+        .password-input:focus {
+            border-color: #60a5fa;
+            box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
+        }
+        
+        .submit-btn {
+            padding: 16px 40px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+        }
+        
+        .submit-btn:active {
+            transform: translateY(1px);
+        }
+        
+        .error-message {
+            color: #f87171;
+            margin-top: 15px;
+            font-weight: 500;
+            opacity: 0;
+            transition: opacity 0.3s;
+            height: 25px;
+        }
+        
+        /* Maze screen styling - initially hidden */
+        .maze-screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .maze-container {
+            position: relative;
+            margin: 30px auto;
+            background-color: #0f172a;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        }
+        
+        .maze-grid {
+            display: grid;
+            grid-gap: 1px;
+        }
+        
+        .cell {
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .wall {
+            background-color: #334155;
+        }
+        
+        .path {
+            background-color: #1e293b;
+        }
+        
+        .player {
+            background-color: #60a5fa;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            transition: all 0.2s ease;
+            box-shadow: 0 0 10px rgba(96, 165, 250, 0.7);
+        }
+        
+        .exit {
+            background-color: #10b981;
+            border-radius: 6px;
+            width: 26px;
+            height: 26px;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+        
+        .instructions {
+            margin-top: 25px;
+            text-align: center;
+            color: #cbd5e1;
+            line-height: 1.6;
+            max-width: 600px;
+        }
+        
+        .controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 25px;
+            gap: 15px;
+        }
+        
+        .control-row {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .control-btn {
+            padding: 12px 20px;
+            background: #475569;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            width: 80px;
+        }
+        
+        .control-btn:hover {
+            background: #64748b;
+            transform: translateY(-2px);
+        }
+        
+        .control-btn:active {
+            transform: translateY(0);
+        }
+        
+        /* Success screen styling */
+        .success-screen {
+            display: none;
+            text-align: center;
+            padding: 50px 20px;
+            animation: fadeIn 1s ease;
+        }
+        
+        .success-icon {
+            font-size: 5rem;
+            margin-bottom: 30px;
+            color: #10b981;
+            animation: bounce 1s ease infinite alternate;
+        }
+        
+        @keyframes bounce {
+            from { transform: translateY(0); }
+            to { transform: translateY(-15px); }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .success-message {
+            font-size: 1.8rem;
+            margin-bottom: 30px;
+            color: #f8fafc;
+            line-height: 1.5;
+        }
+        
+        .secret-code {
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 12px;
+            font-family: monospace;
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+            margin: 30px auto;
+            max-width: 600px;
+            border: 2px dashed #10b981;
+            color: #60a5fa;
+        }
+        
+        .hint {
+            color: #94a3b8;
+            font-style: italic;
+            margin-top: 20px;
+            font-size: 0.95rem;
+        }
+        
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .cell {
+                width: 24px;
+                height: 24px;
+            }
+            
+            .player, .exit {
+                width: 18px;
+                height: 18px;
+            }
+            
+            .control-btn {
+                width: 70px;
+                padding: 10px 15px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .cell {
+                width: 20px;
+                height: 20px;
+            }
+            
+            .player, .exit {
+                width: 16px;
+                height: 16px;
+            }
+            
+            .control-btn {
+                width: 60px;
+                padding: 8px 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Secret Maze Challenge</h1>
+        <p class="subtitle">Unlock with password, navigate the maze, and discover the secret message</p>
+        
+        <!-- Password screen -->
+        <div class="password-screen" id="passwordScreen">
+            <div class="password-form">
+                <input type="password" class="password-input" id="passwordInput" placeholder="Enter password" maxlength="4" autofocus>
+                <button class="submit-btn" id="submitBtn">Unlock Maze</button>
+                <div class="error-message" id="errorMessage">Incorrect password. Try again.</div>
+            </div>
+            <p class="hint">Hint: The password is 6752</p>
+        </div>
+        
+        <!-- Maze screen -->
+        <div class="maze-screen" id="mazeScreen">
+            <div class="maze-container" id="mazeContainer"></div>
+            <div class="instructions">
+                <p>Use the control buttons or arrow keys to navigate through the maze.</p>
+                <p>Reach the green exit to complete the challenge.</p>
+            </div>
+            <div class="controls">
+                <div class="control-row">
+                    <button class="control-btn" id="upBtn">↑ Up</button>
+                </div>
+                <div class="control-row">
+                    <button class="control-btn" id="leftBtn">← Left</button>
+                    <button class="control-btn" id="downBtn">↓ Down</button>
+                    <button class="control-btn" id="rightBtn">→ Right</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Success screen -->
+        <div class="success-screen" id="successScreen">
+            <div class="success-icon">🎉</div>
+            <h2>Congratulations!</h2>
+            <p class="success-message">You've successfully escaped the maze!</p>
+            <p>Your secret code is:</p>
+            <div class="secret-code" id="secretCode"></div>
+            <p class="hint">Copy this text and use it as instructed</p>
+            <button class="submit-btn" id="restartBtn" style="margin-top: 20px;">Play Again</button>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>Created with JavaScript • Use arrow keys for controls</p>
+    </div>
+
+    <script>
+        // Game state
+        const gameState = {
+            password: "6752",
+            playerPosition: { x: 1, y: 1 },
+            exitPosition: { x: 13, y: 13 },
+            maze: [],
+            mazeSize: 15
+        };
+
+        // DOM Elements
+        const passwordScreen = document.getElementById('passwordScreen');
+        const mazeScreen = document.getElementById('mazeScreen');
+        const successScreen = document.getElementById('successScreen');
+        const passwordInput = document.getElementById('passwordInput');
+        const submitBtn = document.getElementById('submitBtn');
+        const errorMessage = document.getElementById('errorMessage');
+        const mazeContainer = document.getElementById('mazeContainer');
+        const secretCode = document.getElementById('secretCode');
+        const restartBtn = document.getElementById('restartBtn');
+        
+        // Control buttons
+        const upBtn = document.getElementById('upBtn');
+        const downBtn = document.getElementById('downBtn');
+        const leftBtn = document.getElementById('leftBtn');
+        const rightBtn = document.getElementById('rightBtn');
+
+        // Initialize maze
+        function initializeMaze() {
+            // Create a simple maze layout
+            const maze = [];
+            
+            // Fill with walls (1 = wall, 0 = path)
+            for (let i = 0; i < gameState.mazeSize; i++) {
+                maze[i] = [];
+                for (let j = 0; j < gameState.mazeSize; j++) {
+                    // Borders are walls
+                    if (i === 0 || i === gameState.mazeSize - 1 || j === 0 || j === gameState.mazeSize - 1) {
+                        maze[i][j] = 1;
+                    } else {
+                        // Create a simple maze pattern
+                        if ((i % 2 === 1 && j % 2 === 1) || Math.random() > 0.3) {
+                            maze[i][j] = 0; // Path
+                        } else {
+                            maze[i][j] = 1; // Wall
+                        }
+                    }
+                }
+            }
+            
+            // Ensure start and exit are paths
+            maze[gameState.playerPosition.y][gameState.playerPosition.x] = 0;
+            maze[gameState.exitPosition.y][gameState.exitPosition.x] = 0;
+            
+            // Ensure there's a clear path from start to exit (simplified)
+            // Create a simple path from start to exit
+            let x = gameState.playerPosition.x;
+            let y = gameState.playerPosition.y;
+            
+            // Move right
+            while (x < gameState.exitPosition.x) {
+                x++;
+                maze[y][x] = 0;
+            }
+            
+            // Move down
+            while (y < gameState.exitPosition.y) {
+                y++;
+                maze[y][x] = 0;
+            }
+            
+            gameState.maze = maze;
+        }
+
+        // Render maze
+        function renderMaze() {
+            mazeContainer.innerHTML = '';
+            
+            // Create maze grid
+            const grid = document.createElement('div');
+            grid.className = 'maze-grid';
+            grid.style.gridTemplateColumns = `repeat(${gameState.mazeSize}, 30px)`;
+            
+            for (let y = 0; y < gameState.mazeSize; y++) {
+                for (let x = 0; x < gameState.mazeSize; x++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    
+                    // Check if this is the player position
+                    if (x === gameState.playerPosition.x && y === gameState.playerPosition.y) {
+                        const player = document.createElement('div');
+                        player.className = 'player';
+                        cell.appendChild(player);
+                        cell.classList.add('path');
+                    } 
+                    // Check if this is the exit position
+                    else if (x === gameState.exitPosition.x && y === gameState.exitPosition.y) {
+                        const exit = document.createElement('div');
+                        exit.className = 'exit';
+                        cell.appendChild(exit);
+                        cell.classList.add('path');
+                    }
+                    // Check if this is a wall or path
+                    else if (gameState.maze[y][x] === 1) {
+                        cell.classList.add('wall');
+                    } else {
+                        cell.classList.add('path');
+                    }
+                    
+                    grid.appendChild(cell);
+                }
+            }
+            
+            mazeContainer.appendChild(grid);
+            
+            // Check if player reached exit
+            if (gameState.playerPosition.x === gameState.exitPosition.x && 
+                gameState.playerPosition.y === gameState.exitPosition.y) {
+                showSuccessScreen();
+            }
+        }
+
+        // Move player
+        function movePlayer(dx, dy) {
+            const newX = gameState.playerPosition.x + dx;
+            const newY = gameState.playerPosition.y + dy;
+            
+            // Check boundaries
+            if (newX >= 0 && newX < gameState.mazeSize && 
+                newY >= 0 && newY < gameState.mazeSize) {
+                
+                // Check if new position is not a wall
+                if (gameState.maze[newY][newX] === 0) {
+                    gameState.playerPosition.x = newX;
+                    gameState.playerPosition.y = newY;
+                    renderMaze();
+                }
+            }
+        }
+
+        // Show success screen
+        function showSuccessScreen() {
+            mazeScreen.style.display = 'none';
+            successScreen.style.display = 'block';
+            secretCode.textContent = "type this in my video: 6752 i got this bro 6752";
+        }
+
+        // Password validation
+        submitBtn.addEventListener('click', () => {
+            if (passwordInput.value === gameState.password) {
+                // Correct password
+                passwordScreen.style.display = 'none';
+                mazeScreen.style.display = 'flex';
+                
+                // Initialize and render maze
+                initializeMaze();
+                renderMaze();
+                
+                // Focus on maze container for keyboard controls
+                mazeContainer.focus();
+            } else {
+                // Incorrect password
+                errorMessage.style.opacity = '1';
+                passwordInput.value = '';
+                passwordInput.focus();
+                
+                // Hide error message after 2 seconds
+                setTimeout(() => {
+                    errorMessage.style.opacity = '0';
+                }, 2000);
+            }
+        });
+
+        // Allow pressing Enter to submit password
+        passwordInput.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') {
+                submitBtn.click();
+            }
+        });
+
+        // Control button events
+        upBtn.addEventListener('click', () => movePlayer(0, -1));
+        downBtn.addEventListener('click', () => movePlayer(0, 1));
+        leftBtn.addEventListener('click', () => movePlayer(-1, 0));
+        rightBtn.addEventListener('click', () => movePlayer(1, 0));
+
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            // Only process arrow keys if maze screen is visible
+            if (mazeScreen.style.display === 'flex') {
+                switch(e.key) {
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        movePlayer(0, -1);
+                        break;
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        movePlayer(0, 1);
+                        break;
+                    case 'ArrowLeft':
+                        e.preventDefault();
+                        movePlayer(-1, 0);
+                        break;
+                    case 'ArrowRight':
+                        e.preventDefault();
+                        movePlayer(1, 0);
+                        break;
+                }
+            }
+        });
+
+        // Restart button
+        restartBtn.addEventListener('click', () => {
+            // Reset player position
+            gameState.playerPosition = { x: 1, y: 1 };
+            
+            // Show password screen
+            successScreen.style.display = 'none';
+            passwordScreen.style.display = 'block';
+            passwordInput.value = '';
+            passwordInput.focus();
+        });
+
+        // Focus on password input on load
+        passwordInput.focus();
+    </script>
+</body>
+</html>
